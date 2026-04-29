@@ -1,5 +1,7 @@
 package com.university.testing.test.services;
 
+import com.university.testing.shared.dtos.TestCreateDto;
+import com.university.testing.shared.dtos.TestResponseDto;
 import com.university.testing.test.data.TestRepository;
 import com.university.testing.test.models.Test;
 import lombok.RequiredArgsConstructor;
@@ -11,8 +13,22 @@ import java.util.List;
 public class TestService {
     private final TestRepository testRepository;
 
-    public Test createTest(Test test) {
-        return testRepository.save(test);
+    public TestResponseDto createTest(TestCreateDto dto) {
+        // Логика маппинга, которую мы писали ранее
+        Test test = Test.builder()
+                .title(dto.getTitle())
+                .description(dto.getDescription())
+                .isPublished(false)
+                .build();
+
+        Test savedTest = testRepository.save(test);
+
+        return TestResponseDto.builder()
+                .id(savedTest.getId())
+                .title(savedTest.getTitle())
+                .description(savedTest.getDescription())
+                .isPublished(savedTest.isPublished())
+                .build();
     }
 
     public List<Test> getAllTests() {
