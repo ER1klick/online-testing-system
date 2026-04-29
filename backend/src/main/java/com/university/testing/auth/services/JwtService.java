@@ -1,4 +1,4 @@
-package com.university.testing.auth.security;
+package com.university.testing.auth.services;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;

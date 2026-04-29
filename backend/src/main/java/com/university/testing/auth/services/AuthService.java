@@ -1,7 +1,6 @@
 package com.university.testing.auth.services;
 
 import com.university.testing.auth.data.UserRepository;
-import com.university.testing.auth.security.JwtService;
 import com.university.testing.shared.dtos.LoginRequest;
 import com.university.testing.shared.models.User;
 import lombok.RequiredArgsConstructor;
