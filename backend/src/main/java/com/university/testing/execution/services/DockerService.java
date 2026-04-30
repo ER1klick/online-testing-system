@@ -29,7 +29,7 @@ public class DockerService {
         String imageName = "sandbox-" + language;
 
         HostConfig hostConfig = HostConfig.newHostConfig()
-                .withMemory(128 * 1024 * 1024L) 
+                .withMemory(128 * 1024 * 1024L)
                 .withNetworkMode("none")
                 .withPrivileged(false)
                 .withAutoRemove(true);
