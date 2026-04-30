@@ -12,8 +12,6 @@ public class ExecutionConsumer {
 
     @RabbitListener(queues = RabbitConfig.EXECUTION_QUEUE)
     public void receiveTask(String message) {
-        System.out.println("Получена задача: " + message);
-
-        dockerService.runCode(message);
+        dockerService.runCode(message, "python");
     }
 }
