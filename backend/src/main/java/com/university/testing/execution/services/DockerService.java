@@ -11,7 +11,6 @@ import com.github.dockerjava.transport.DockerHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-
 import java.io.ByteArrayOutputStream;
 
 @Service
@@ -30,23 +29,36 @@ public class DockerService {
                 .build();
 
         this.dockerClient = DockerClientImpl.getInstance(config, httpClient);
-        log.info("Docker Client успешно инициализирован.");
     }
 
     public String runCode(String code, String language) {
-        String imageName = "sandbox-" + language;
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        String imageName = "sandbox-" + language.toLowerCase();
+        String formattedCode = code.replace("\\n", "\n");
+        String escapedCode = formattedCode.replace("\"", "\\\"");
 
-        log.info("Запуск кода на языке: {} в контейнере {}", language, imageName);
+        String cmd = switch (language.toLowerCase()) {
+            case "python" -> "printf '%s' \"" + escapedCode + "\" > solution.py && python3 solution.py";
+            case "java"   -> "printf '%s' \"" + escapedCode + "\" > Solution.java && javac Solution.java && java Solution";
+            case "cpp"    -> "printf '%s' \"" + escapedCode + "\" > solution.cpp && g++ solution.cpp -o app && ./app";
+            case "csharp" -> "dotnet new console -n App --force > /dev/null && " +
+                    "printf '%s' \"" + escapedCode + "\" > App/Program.cs && " +
+                    "dotnet build App/App.csproj --configuration Release --nologo --verbosity quiet > /dev/null && " +
+                    "dotnet App/bin/Release/net8.0/App.dll";
+            default -> throw new IllegalArgumentException("Unsupported language: " + language);
+        };
+
+        log.info("Starting execution container for language: {}", language);
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         try {
             CreateContainerResponse container = dockerClient.createContainerCmd(imageName)
-                    .withCmd("sh", "-c", "echo \"" + code + "\" > solution.py && python3 solution.py")
-                    .withHostConfig(HostConfig.newHostConfig().withMemory(128 * 1024 * 1024L))
+                    .withCmd("sh", "-c", cmd)
+                    .withHostConfig(HostConfig.newHostConfig()
+                            .withMemory(128 * 1024 * 1024L)
+                            .withNetworkMode("none"))
                     .exec();
 
             dockerClient.startContainerCmd(container.getId()).exec();
-
             dockerClient.waitContainerCmd(container.getId())
                     .exec(new com.github.dockerjava.core.command.WaitContainerResultCallback())
                     .awaitCompletion();
@@ -57,19 +69,16 @@ public class DockerService {
                     .exec(new com.github.dockerjava.api.async.ResultCallback.Adapter<>() {
                         @Override
                         public void onNext(com.github.dockerjava.api.model.Frame object) {
-                            try { outputStream.write(object.getPayload()); } catch (Exception e) { log.error("Ошибка чтения логов", e); }
+                            try { outputStream.write(object.getPayload()); } catch (Exception e) { log.error("Log error", e); }
                         }
                     }).awaitCompletion();
 
             dockerClient.removeContainerCmd(container.getId()).exec();
-
-            String result = outputStream.toString();
-            log.info("Код выполнен успешно. Результат: {}", result);
-            return result;
+            return outputStream.toString();
 
         } catch (Exception e) {
-            log.error("Критическая ошибка при выполнении кода: {}", e.getMessage(), e);
-            return "Ошибка выполнения: " + e.getMessage();
+            log.error("Execution error: {}", e.getMessage());
+            return "Execution error: " + e.getMessage();
         }
     }
 }

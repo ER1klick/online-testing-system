@@ -5,9 +5,11 @@ import com.university.testing.result.data.SubmissionRepository;
 import com.university.testing.result.models.Answer;
 import com.university.testing.result.models.Submission;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ResultService {
@@ -15,7 +17,7 @@ public class ResultService {
     private final SubmissionRepository submissionRepository;
 
     public void saveResult(UUID submissionId, UUID questionId, String output) {
-        System.out.println("Пытаюсь сохранить результат для submissionId: " + submissionId);
+        log.info("Saving result for submissionId: {}", submissionId);
 
         Submission submission = submissionRepository.findById(submissionId)
                 .orElseThrow(() -> new RuntimeException("Submission not found"));
@@ -27,6 +29,6 @@ public class ResultService {
                 .build();
 
         answerRepository.save(answer);
-        System.out.println("Результат успешно сохранен в БД!");
+        log.info("Result saved successfully!");
     }
 }

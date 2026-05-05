@@ -15,8 +15,8 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@RequestBody LoginRequest request) {
-        String token = authService.authenticate(request);
-        return ResponseEntity.ok(Map.of("token", token));
+    public ResponseEntity<String> login(@RequestBody LoginRequest request) {
+        authService.authenticate(request);
+        return ResponseEntity.ok("Успешная авторизация. Сессия создана.");
     }
 }
