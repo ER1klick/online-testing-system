@@ -21,7 +21,17 @@ public class TestController {
     }
 
     @GetMapping
-    public List<Test> getAllTests() {
-        return testService.getAllTests();
+    public ResponseEntity<List<TestResponseDto>> getAllTests() {
+        return ResponseEntity.ok(testService.getAllTests());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<TestResponseDto> getTest(@PathVariable java.util.UUID id) {
+        return ResponseEntity.ok(testService.getTestById(id));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<TestResponseDto> updateTest(@PathVariable java.util.UUID id, @RequestBody TestCreateDto testDto) {
+        return ResponseEntity.ok(testService.updateTest(id, testDto));
     }
 }
