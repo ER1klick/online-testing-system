@@ -106,7 +106,19 @@ export default function Dashboard() {
                             📄 Импорт студентов (PDF)
                         </button>
                         <button
-                            onClick={createTest} // Теперь вызывает функцию создания
+                            onClick={() => navigate('/add-teacher')}
+                            style={{ backgroundColor: 'white',
+                                color: 'var(--miit-dark)',
+                                border: '1px solid var(--miit-dark)',
+                                padding: '0.75rem 1.5rem',
+                                borderRadius: '4px', cursor:
+                                'pointer', marginRight: '1rem',
+                                fontWeight: 500 }}
+                        >
+                            👨‍🏫 Добавить преподавателя
+                        </button>
+                        <button
+                            onClick={createTest}
                             style={{
                                 backgroundColor: 'var(--miit-blue)',
                                 color: 'white',

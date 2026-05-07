@@ -6,6 +6,7 @@ import TestEditor from './pages/TestEditor';
 import ImportStudents from './pages/ImportStudents';
 import GroupsList from './pages/GroupsList';
 import GroupDetails from './pages/GroupDetails';
+import AddTeacher from './pages/AddTeacher';
 import { api } from './services/api';
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
@@ -45,6 +46,10 @@ function App() {
 
                 <Route path="/groups/:groupName" element=
                 {<ProtectedRoute><GroupDetails /></ProtectedRoute>
+                    } />
+
+                <Route path="/add-teacher" element=
+                {<ProtectedRoute><AddTeacher /></ProtectedRoute>
                     } />
 
                 <Route path="*" element={<Navigate to="/login" />} />
