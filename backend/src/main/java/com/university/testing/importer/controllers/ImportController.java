@@ -14,8 +14,14 @@ public class ImportController {
     private final PdfImportService pdfImportService;
 
     @PostMapping("/pdf")
-    public ResponseEntity<String> importPdf(@RequestParam("file") MultipartFile file) throws IOException {
-        String text = pdfImportService.extractTextFromPdf(file);
-        return ResponseEntity.ok(text);
+    public ResponseEntity<String> importPdf(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("groupName") String groupName) throws IOException {
+        pdfImportService.importStudentsFromPdf(file, groupName);
+        return ResponseEntity.ok("Success import");
     }
+
+
+
+
 }

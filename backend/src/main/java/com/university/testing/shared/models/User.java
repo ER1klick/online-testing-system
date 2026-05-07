@@ -26,4 +26,10 @@ public class User {
     public enum Role {
         TEACHER, STUDENT, ADMIN
     }
+
+    @Column(nullable = true)
+    private String groupName;
+
+    @Column(nullable = true)
+    private String fullName;
 }

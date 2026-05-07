@@ -85,6 +85,12 @@ export default function Dashboard() {
 
                     <div>
                         <button
+                            onClick={() => navigate('/groups')}
+                            style={{ backgroundColor: 'white', color: 'var(--miit-dark)', border: '1px solid var(--miit-dark)', padding: '0.75rem 1.5rem', borderRadius: '4px', cursor: 'pointer', marginRight: '1rem', fontWeight: 500 }}
+                            >
+                            👥 Список групп
+                        </button>
+                        <button
                             onClick={() => navigate('/import-students')}
                             style={{
                                 backgroundColor: 'white',

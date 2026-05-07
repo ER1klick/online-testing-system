@@ -3,6 +3,9 @@ import { useEffect, useState } from 'react';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import TestEditor from './pages/TestEditor';
+import ImportStudents from './pages/ImportStudents';
+import GroupsList from './pages/GroupsList';
+import GroupDetails from './pages/GroupDetails';
 import { api } from './services/api';
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
@@ -31,6 +34,18 @@ function App() {
                 <Route path="/edit-test/:id" element={
                     <ProtectedRoute><TestEditor /></ProtectedRoute>
                 } />
+
+                <Route path="/import-students" element={
+                    <ProtectedRoute><ImportStudents /></ProtectedRoute>
+                } />
+
+                <Route path="/groups" element={
+                    <ProtectedRoute><GroupsList /></ProtectedRoute>
+                    } />
+
+                <Route path="/groups/:groupName" element=
+                {<ProtectedRoute><GroupDetails /></ProtectedRoute>
+                    } />
 
                 <Route path="*" element={<Navigate to="/login" />} />
             </Routes>
