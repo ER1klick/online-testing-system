@@ -36,6 +36,17 @@ export default function Dashboard() {
         navigate('/login');
     };
 
+    // Функция создания нового теста
+    const createTest = async () => {
+        try {
+            const res = await api.post('/v1/tests/create');
+            navigate(`/edit-test/${res.data.id}`);
+        } catch (error) {
+            console.error('Ошибка создания теста:', error);
+            alert('Не удалось создать тест');
+        }
+    };
+
     return (
         <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-light)' }}>
             {/* Верхняя панель (Header) */}
@@ -89,7 +100,7 @@ export default function Dashboard() {
                             📄 Импорт студентов (PDF)
                         </button>
                         <button
-                            onClick={() => navigate('/create-test')}
+                            onClick={createTest} // Теперь вызывает функцию создания
                             style={{
                                 backgroundColor: 'var(--miit-blue)',
                                 color: 'white',
@@ -123,7 +134,7 @@ export default function Dashboard() {
                                 borderTop: `4px solid ${test.isPublished ? '#28a745' : 'var(--text-muted)'}`
                             }}>
                                 <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--miit-dark)' }}>{test.title}</h3>
-                                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1.5rem' }}>{test.description}</p>
+                                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1rem' }}>{test.description}</p>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <span style={{
                                         fontSize: '0.8rem',

@@ -34,4 +34,9 @@ public class TestController {
     public ResponseEntity<TestResponseDto> updateTest(@PathVariable java.util.UUID id, @RequestBody TestCreateDto testDto) {
         return ResponseEntity.ok(testService.updateTest(id, testDto));
     }
+
+    @PostMapping("/create")
+    public ResponseEntity<TestResponseDto> createEmptyTest() {
+        return ResponseEntity.ok(testService.createEmptyTest());
+    }
 }

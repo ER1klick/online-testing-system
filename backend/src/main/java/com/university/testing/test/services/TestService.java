@@ -105,4 +105,15 @@ public class TestService {
 
         return getTestById(id);
     }
+
+    @Transactional
+    public TestResponseDto createEmptyTest() {
+        Test test = Test.builder()
+                .title("Новый тест")
+                .description("Описание")
+                .isPublished(false)
+                .build();
+        Test savedTest = testRepository.save(test);
+        return getTestById(savedTest.getId());
+    }
 }

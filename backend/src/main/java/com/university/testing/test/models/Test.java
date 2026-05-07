@@ -22,5 +22,7 @@ public class Test {
     private boolean isPublished;
 
     @OneToMany(mappedBy = "test", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<Question> questions = new ArrayList<>();
+
 }
