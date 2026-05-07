@@ -2,6 +2,8 @@ package com.university.testing.test.models;
 
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,6 +21,6 @@ public class Test {
     private String description;
     private boolean isPublished;
 
-    @OneToMany(mappedBy = "test", cascade = CascadeType.ALL)
-    private List<Question> questions;
+    @OneToMany(mappedBy = "test", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Question> questions = new ArrayList<>();
 }

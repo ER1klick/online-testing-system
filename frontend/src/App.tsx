@@ -1,11 +1,21 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
-import TestEditor from './pages/TestEditor'; // <--- ДОБАВИТЬ ИМПОРТ
+import TestEditor from './pages/TestEditor';
+import { api } from './services/api';
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
-    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-    return isAuthenticated ? children : <Navigate to="/login" />;
+    const [isAuth, setIsAuth] = useState<boolean | null>(null);
+
+    useEffect(() => {
+        api.get('/v1/auth/me')
+            .then(() => setIsAuth(true))
+            .catch(() => setIsAuth(false));
+    }, []);
+
+    if (isAuth === null) return <div>Загрузка...</div>;
+    return isAuth ? children : <Navigate to="/login" />;
 };
 
 function App() {

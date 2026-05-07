@@ -19,6 +19,7 @@ public class Question {
 
     private String text;
     private String type; // "SINGLE_CHOICE", "CODE", "TEXT"
+    private String sectionTitle;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")

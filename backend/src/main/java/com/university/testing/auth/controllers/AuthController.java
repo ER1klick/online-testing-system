@@ -37,4 +37,13 @@ public class AuthController {
 
         return ResponseEntity.ok("Successful authorization. Session created.");
     }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser(HttpServletRequest request) {
+        var session = request.getSession(false);
+        if (session != null && SecurityContextHolder.getContext().getAuthentication() != null) {
+            return ResponseEntity.ok("Authenticated");
+        }
+        return ResponseEntity.status(401).body("Not authenticated");
+    }
 }

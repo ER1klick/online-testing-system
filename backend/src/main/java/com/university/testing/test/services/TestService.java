@@ -31,6 +31,7 @@ public class TestService {
                         .text(qDto.getText())
                         .type(qDto.getType())
                         .content(qDto.getContent())
+                        .sectionTitle(qDto.getSectionTitle()) // Сохраняем раздел
                         .test(test)
                         .build()
         ).toList();
@@ -64,6 +65,7 @@ public class TestService {
             dto.setText(q.getText());
             dto.setType(q.getType());
             dto.setContent(q.getContent());
+            dto.setSectionTitle(q.getSectionTitle());
             return dto;
         }).toList();
 
@@ -85,19 +87,22 @@ public class TestService {
         test.setDescription(dto.getDescription());
 
         test.getQuestions().clear();
+        testRepository.saveAndFlush(test);
 
-        List<Question> newQuestions = dto.getQuestions().stream().map(qDto ->
-                Question.builder()
+        List<Question> newQuestions = dto.getQuestions().stream()
+                .filter(java.util.Objects::nonNull)
+                .map(qDto -> Question.builder()
                         .text(qDto.getText())
                         .type(qDto.getType())
                         .content(qDto.getContent())
+                        .sectionTitle(qDto.getSectionTitle())
                         .test(test)
                         .build()
-        ).toList();
+                ).toList();
 
         test.getQuestions().addAll(newQuestions);
-
         testRepository.save(test);
+
         return getTestById(id);
     }
 }

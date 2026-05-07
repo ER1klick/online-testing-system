@@ -8,4 +8,5 @@ public class QuestionDto {
     private String text;
     private String type;
     private Map<String, Object> content;
+    private String sectionTitle;
 }
