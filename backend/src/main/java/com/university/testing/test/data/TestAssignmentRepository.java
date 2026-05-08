@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.UUID;
 
 public interface TestAssignmentRepository extends JpaRepository<TestAssignment, UUID> {
-    List<TestAssignment> findByStudentGroupId(UUID groupId);
+
+    List<TestAssignment> findByStudentIdsContaining(UUID studentId);
+
     List<TestAssignment> findByTestId(UUID testId);
 }

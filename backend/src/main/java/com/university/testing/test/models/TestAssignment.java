@@ -1,10 +1,9 @@
 package com.university.testing.test.models;
 
-import com.university.testing.shared.models.Group;
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -21,9 +20,10 @@ public class TestAssignment {
     @JoinColumn(name = "test_id", nullable = false)
     private Test test;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "group_id", nullable = false)
-    private Group studentGroup;
+    @ElementCollection
+    @CollectionTable(name = "assignment_students", joinColumns = @JoinColumn(name = "assignment_id"))
+    @Column(name = "student_id")
+    private List<UUID> studentIds;
 
     @Column(nullable = false)
     private LocalDateTime startTime;

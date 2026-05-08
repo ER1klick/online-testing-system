@@ -14,6 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -23,50 +26,36 @@ public class PdfImportService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public void importStudentsFromPdf(MultipartFile file, String groupName) throws IOException {
-        Group group = groupRepository.findByName(groupName)
-                .orElseGet(() -> groupRepository.save(Group.builder().name(groupName).build()));
+    public List<User> importStudentsFromPdf(MultipartFile file) throws IOException {
+        List<User> importedUsers = new java.util.ArrayList<>();
 
         try (PDDocument document = Loader.loadPDF(file.getInputStream().readAllBytes())) {
             PDFTextStripper stripper = new PDFTextStripper();
             String text = stripper.getText(document);
 
+            Pattern pattern = Pattern.compile("^\\d+\\s+(\\d+)\\s+([А-Яа-яЁё ]+?)\\s+\\d{2}\\.\\d{2}\\.\\d{4}", Pattern.MULTILINE);
             String[] lines = text.split("\n");
+
             for (String line : lines) {
-                String[] parts = line.trim().split("\\s+");
+                Matcher matcher = pattern.matcher(line.trim());
+                if (matcher.find()) {
+                    String zachetNumber = matcher.group(1);
+                    String fio = matcher.group(2).trim();
+                    String email = zachetNumber + "@edu.rut-miit.ru";
 
-                if (parts.length >= 6 && parts[0].matches("\\d+") && parts[1].matches("\\d+")) {
-                    String gradebookNumber = parts[1];
-
-                    int dateIndex = -1;
-                    for (int i = 2; i < parts.length; i++) {
-                        if (parts[i].matches("\\d{2}\\.\\d{2}\\.\\d{4}")) {
-                            dateIndex = i;
-                            break;
-                        }
-                    }
-
-                    if (dateIndex > 2) {
-                        StringBuilder fioBuilder = new StringBuilder();
-                        for (int i = 2; i < dateIndex; i++) {
-                            fioBuilder.append(parts[i]).append(" ");
-                        }
-                        String fio = fioBuilder.toString().trim();
-                        String email = gradebookNumber + "@edu.rut-miit.ru";
-
-                        if (userRepository.findByEmail(email).isEmpty()) {
-                            User student = User.builder()
-                                    .email(email)
-                                    .password(passwordEncoder.encode("password" + gradebookNumber))
-                                    .role(User.Role.STUDENT)
-                                    .studentGroup(group)
-                                    .fullName(fio)
-                                    .build();
-                            userRepository.save(student);
-                        }
-                    }
+                    User student = userRepository.findByEmail(email).orElseGet(() -> {
+                        User newUser = User.builder()
+                                .email(email)
+                                .password(passwordEncoder.encode("password" + zachetNumber))
+                                .role(User.Role.STUDENT)
+                                .fullName(fio)
+                                .build();
+                        return userRepository.save(newUser);
+                    });
+                    importedUsers.add(student);
                 }
             }
         }
+        return importedUsers;
     }
 }
