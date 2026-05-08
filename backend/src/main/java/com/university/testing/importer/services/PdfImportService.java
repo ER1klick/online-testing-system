@@ -1,6 +1,8 @@
 package com.university.testing.importer.services;
 
+import com.university.testing.auth.data.GroupRepository;
 import com.university.testing.auth.data.UserRepository;
+import com.university.testing.shared.models.Group;
 import com.university.testing.shared.models.User;
 import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.Loader;
@@ -8,6 +10,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -16,9 +19,14 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class PdfImportService {
     private final UserRepository userRepository;
+    private final GroupRepository groupRepository;
     private final PasswordEncoder passwordEncoder;
 
+    @Transactional
     public void importStudentsFromPdf(MultipartFile file, String groupName) throws IOException {
+        Group group = groupRepository.findByName(groupName)
+                .orElseGet(() -> groupRepository.save(Group.builder().name(groupName).build()));
+
         try (PDDocument document = Loader.loadPDF(file.getInputStream().readAllBytes())) {
             PDFTextStripper stripper = new PDFTextStripper();
             String text = stripper.getText(document);
@@ -49,9 +57,9 @@ public class PdfImportService {
                         if (userRepository.findByEmail(email).isEmpty()) {
                             User student = User.builder()
                                     .email(email)
-                                    .password(passwordEncoder.encode("password"+gradebookNumber))
+                                    .password(passwordEncoder.encode("password" + gradebookNumber))
                                     .role(User.Role.STUDENT)
-                                    .groupName(groupName)
+                                    .studentGroup(group)
                                     .fullName(fio)
                                     .build();
                             userRepository.save(student);

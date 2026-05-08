@@ -28,4 +28,7 @@ public class Submission {
     private LocalDateTime submittedAt;
 
     private Double finalScore;
+
+    @Column(name = "historical_group_name")
+    private String groupName;
 }

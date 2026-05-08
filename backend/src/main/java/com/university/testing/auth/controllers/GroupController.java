@@ -2,6 +2,7 @@ package com.university.testing.auth.controllers;
 
 import com.university.testing.auth.data.UserRepository;
 import com.university.testing.shared.dtos.StudentDto;
+import com.university.testing.shared.models.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,14 +23,17 @@ public class GroupController {
 
     @GetMapping("/{groupName}/students")
     public ResponseEntity<List<StudentDto>> getStudentsByGroup(@PathVariable String groupName) {
-        List<StudentDto> students = userRepository.findByGroupName(groupName).stream()
+        List<User> users = userRepository.findByStudentGroupName(groupName);
+
+        List<StudentDto> students = users.stream()
                 .map(u -> StudentDto.builder()
                         .id(u.getId())
-                        .fullName(u.getFullName())
                         .email(u.getEmail())
-                        .groupName(u.getGroupName())
+                        .fullName(u.getFullName())
+                        .groupName(u.getStudentGroup() != null ? u.getStudentGroup().getName() : null)
                         .build())
                 .toList();
+
         return ResponseEntity.ok(students);
     }
 }

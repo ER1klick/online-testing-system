@@ -26,7 +26,12 @@ public class DataInitializer {
             if (userRepo.findByEmail("admin2@test.com").isEmpty()) {
                 User admin = userRepo.save(User.builder().email("admin2@test.com").password(passwordEncoder.encode("admin123")).role(User.Role.ADMIN).build());
                 Test test = testRepo.save(Test.builder().title("Sample Test").description("Description").isPublished(true).build());
-                Submission sub = subRepo.save(Submission.builder().student(admin).test(test).submittedAt(LocalDateTime.now()).build());
+                Submission sub = subRepo.save(Submission.builder()
+                        .student(admin)
+                        .test(test)
+                        .groupName(admin.getStudentGroup() != null ? admin.getStudentGroup().getName() : "Без группы")
+                        .submittedAt(LocalDateTime.now())
+                        .build());
 
                 log.info("--- TEST DATA INITIALIZED ---");
                 log.info("Submission ID: {}", sub.getId());

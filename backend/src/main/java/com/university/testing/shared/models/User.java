@@ -27,9 +27,9 @@ public class User {
         TEACHER, STUDENT, ADMIN
     }
 
-    @Column(nullable = true)
-    private String groupName;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_id")
+    private Group studentGroup;
 
-    @Column(nullable = true)
-    private String fullName;
-}
+    @Column(name = "full_name")
+    private String fullName;}
