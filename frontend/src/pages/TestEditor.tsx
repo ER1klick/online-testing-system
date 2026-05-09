@@ -41,12 +41,10 @@ export default function TestEditor() {
     const [activeTab, setActiveTab] = useState<'edit' | 'assign' | 'results'>('edit');
     const [isLoading, setIsLoading] = useState(true);
 
-    // Данные теста
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [sections, setSections] = useState<Section[]>([{ title: 'Раздел 1', questions: [] }]);
 
-    // Данные для назначения
     const[previewStudents, setPreviewStudents] = useState<StudentPreview[]>([]);
     const [startTime, setStartTime] = useState('');
     const [endTime, setEndTime] = useState('');

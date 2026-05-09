@@ -36,16 +36,29 @@ export default function Dashboard() {
         navigate('/login');
     };
 
-    // Функция создания нового теста
     const createTest = async () => {
-        try {
-            const res = await api.post('/v1/tests/create');
-            navigate(`/edit-test/${res.data.id}`);
-        } catch (error) {
-            console.error('Ошибка создания теста:', error);
-            alert('Не удалось создать тест');
-        }
-    };
+            try {
+                const res = await api.post('/v1/tests/create');
+                const newTestId = res.data.id;
+
+                await api.put(`/v1/tests/${newTestId}`, {
+                    ...res.data,
+                    title: "Новый тест",
+                    questions: [
+                        {
+                            text: "Введите номер вашей группы (например, УВП-411)",
+                            type: "TEXT",
+                            content: { options: [] }
+                        }
+                    ]
+                });
+
+                navigate(`/edit-test/${newTestId}`);
+            } catch (error) {
+                console.error('Ошибка создания теста:', error);
+                alert('Не удалось создать тест. Проверьте соединение с сервером.');
+            }
+        };
 
     return (
         <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-light)' }}>
@@ -83,11 +96,11 @@ export default function Dashboard() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                     <h2 style={{ color: 'var(--miit-dark)', margin: 0 }}>Мои тесты</h2>
 
-                    <div>
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                         <button
                             onClick={() => navigate('/groups')}
-                            style={{ backgroundColor: 'white', color: 'var(--miit-dark)', border: '1px solid var(--miit-dark)', padding: '0.75rem 1.5rem', borderRadius: '4px', cursor: 'pointer', marginRight: '1rem', fontWeight: 500 }}
-                            >
+                            style={{ backgroundColor: 'white', color: 'var(--miit-dark)', border: '1px solid var(--miit-dark)', padding: '0.75rem 1.5rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 500 }}
+                        >
                             👥 Список групп
                         </button>
                         <button
@@ -99,7 +112,6 @@ export default function Dashboard() {
                                 padding: '0.75rem 1.5rem',
                                 borderRadius: '4px',
                                 cursor: 'pointer',
-                                marginRight: '1rem',
                                 fontWeight: 500
                             }}
                         >
@@ -107,13 +119,15 @@ export default function Dashboard() {
                         </button>
                         <button
                             onClick={() => navigate('/add-teacher')}
-                            style={{ backgroundColor: 'white',
+                            style={{
+                                backgroundColor: 'white',
                                 color: 'var(--miit-dark)',
                                 border: '1px solid var(--miit-dark)',
                                 padding: '0.75rem 1.5rem',
-                                borderRadius: '4px', cursor:
-                                'pointer', marginRight: '1rem',
-                                fontWeight: 500 }}
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontWeight: 500
+                            }}
                         >
                             👨‍🏫 Добавить преподавателя
                         </button>
@@ -126,7 +140,8 @@ export default function Dashboard() {
                                 padding: '0.75rem 1.5rem',
                                 borderRadius: '4px',
                                 cursor: 'pointer',
-                                fontWeight: 500
+                                fontWeight: 500,
+                                boxShadow: '0 2px 4px rgba(0,85,164,0.3)'
                             }}
                         >
                             + Создать тест
@@ -136,10 +151,18 @@ export default function Dashboard() {
 
                 {/* Список тестов */}
                 {isLoading ? (
-                    <p>Загрузка тестов...</p>
+                    <div style={{ textAlign: 'center', padding: '3rem' }}>
+                        <p style={{ color: 'var(--text-muted)' }}>Загрузка тестов...</p>
+                    </div>
                 ) : tests.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '3rem', backgroundColor: 'white', borderRadius: '8px', border: '1px dashed #ccc' }}>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>У вас пока нет созданных тестов.</p>
+                    <div style={{ textAlign: 'center', padding: '5rem 3rem', backgroundColor: 'white', borderRadius: '8px', border: '1px dashed #ccc' }}>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', marginBottom: '1.5rem' }}>У вас пока нет созданных тестов.</p>
+                        <button
+                            onClick={createTest}
+                            style={{ color: 'var(--miit-blue)', background: 'none', border: '1px solid var(--miit-blue)', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer' }}
+                        >
+                            Создать первый тест
+                        </button>
                     </div>
                 ) : (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
@@ -149,25 +172,50 @@ export default function Dashboard() {
                                 padding: '1.5rem',
                                 borderRadius: '8px',
                                 boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
-                                borderTop: `4px solid ${test.isPublished ? '#28a745' : 'var(--text-muted)'}`
+                                borderTop: `4px solid ${test.isPublished ? '#28a745' : '#adb5bd'}`,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'space-between'
                             }}>
-                                <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--miit-dark)' }}>{test.title}</h3>
-                                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1rem' }}>{test.description}</p>
+                                <div>
+                                    <h3 style={{ margin: '0 0 0.5rem 0', color: 'var(--miit-dark)' }}>{test.title}</h3>
+                                    <p style={{
+                                        color: 'var(--text-muted)',
+                                        fontSize: '0.9rem',
+                                        marginBottom: '1.5rem',
+                                        display: '-webkit-box',
+                                        WebkitLineClamp: 2,
+                                        WebkitBoxOrient: 'vertical',
+                                        overflow: 'hidden'
+                                    }}>
+                                        {test.description || "Нет описания"}
+                                    </p>
+                                </div>
+
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <span style={{
-                                        fontSize: '0.8rem',
-                                        padding: '0.25rem 0.5rem',
+                                        fontSize: '0.75rem',
+                                        padding: '0.25rem 0.6rem',
                                         backgroundColor: test.isPublished ? '#e6f4ea' : '#f8f9fa',
                                         color: test.isPublished ? '#1e8e3e' : '#6c757d',
-                                        borderRadius: '4px'
+                                        borderRadius: '4px',
+                                        fontWeight: 'bold',
+                                        textTransform: 'uppercase'
                                     }}>
                                         {test.isPublished ? 'Опубликован' : 'Черновик'}
                                     </span>
                                     <button
                                         onClick={() => navigate(`/edit-test/${test.id}`)}
-                                        style={{ background: 'none', border: 'none', color: 'var(--miit-blue)', cursor: 'pointer', fontWeight: 500 }}
+                                        style={{
+                                            background: 'none',
+                                            border: 'none',
+                                            color: 'var(--miit-blue)',
+                                            cursor: 'pointer',
+                                            fontWeight: 600,
+                                            fontSize: '0.9rem'
+                                        }}
                                     >
-                                        Редактировать
+                                        Редактировать →
                                     </button>
                                 </div>
                             </div>

@@ -10,6 +10,8 @@ import AddTeacher from './pages/AddTeacher';
 import TakeTest from './pages/TakeTest';
 import GroupsList from './pages/GroupsList';
 import GroupDetails from './pages/GroupDetails';
+import TestResults from './pages/TestResults';
+import SubmissionDetail from './pages/SubmissionDetail';
 
 export default function App() {
     const [user, setUser] = useState<{ email: string, role: string } | null>(null);
@@ -33,7 +35,7 @@ export default function App() {
     return (
         <BrowserRouter>
             <Routes>
-                {/* Страница логина открыта ВСЕМ. Но если ты УЖЕ залогинен - кидаем на дашборд */}
+                {/* Страница логина */}
                 <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
 
                 {/* Если залогинен - показываем дашборд по роли, если нет - на логин */}
@@ -47,6 +49,8 @@ export default function App() {
                 <Route path="/groups" element={user?.role !== 'STUDENT' ? <GroupsList /> : <Navigate to="/dashboard" />} />
                 <Route path="/groups/:groupName" element={user?.role !== 'STUDENT' ? <GroupDetails /> : <Navigate to="/dashboard" />} />
                 <Route path="/add-teacher" element={user?.role === 'ADMIN' ? <AddTeacher /> : <Navigate to="/dashboard" />} />
+                <Route path="/test-results/:testId" element={user?.role !== 'STUDENT' ? <TestResults /> : <Navigate to="/dashboard" />} />
+                <Route path="/submission/:submissionId" element={user?.role !== 'STUDENT' ? <SubmissionDetail /> : <Navigate to="/dashboard" />} />
 
                 {/* Маршруты для СТУДЕНТА */}
                 <Route path="/take-test/:id" element={user?.role === 'STUDENT' ? <TakeTest /> : <Navigate to="/dashboard" />} />
