@@ -1,61 +1,59 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { api } from './services/api';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import StudentDashboard from './pages/StudentDashboard';
 import TestEditor from './pages/TestEditor';
 import ImportStudents from './pages/ImportStudents';
+import AddTeacher from './pages/AddTeacher';
+import TakeTest from './pages/TakeTest';
 import GroupsList from './pages/GroupsList';
 import GroupDetails from './pages/GroupDetails';
-import AddTeacher from './pages/AddTeacher';
-import { api } from './services/api';
 
-const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
-    const [isAuth, setIsAuth] = useState<boolean | null>(null);
+export default function App() {
+    const [user, setUser] = useState<{ email: string, role: string } | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         api.get('/v1/auth/me')
-            .then(() => setIsAuth(true))
-            .catch(() => setIsAuth(false));
+            .then(res => {
+                if (res.data.role === 'GUEST') {
+                    setUser(null);
+                } else {
+                    setUser(res.data);
+                }
+            })
+            .catch(() => setUser(null))
+            .finally(() => setIsLoading(false));
     }, []);
 
-    if (isAuth === null) return <div>Загрузка...</div>;
-    return isAuth ? children : <Navigate to="/login" />;
-};
+    if (isLoading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Загрузка...</div>;
 
-function App() {
     return (
         <BrowserRouter>
             <Routes>
-                <Route path="/login" element={<Login />} />
+                {/* Страница логина открыта ВСЕМ. Но если ты УЖЕ залогинен - кидаем на дашборд */}
+                <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
 
+                {/* Если залогинен - показываем дашборд по роли, если нет - на логин */}
                 <Route path="/dashboard" element={
-                    <ProtectedRoute><Dashboard /></ProtectedRoute>
+                    user ? (user.role === 'STUDENT' ? <StudentDashboard /> : <Dashboard />) : <Navigate to="/login" />
                 } />
 
-                <Route path="/edit-test/:id" element={
-                    <ProtectedRoute><TestEditor /></ProtectedRoute>
-                } />
+                {/* Маршруты для ПРЕПОДАВАТЕЛЯ и АДМИНА */}
+                <Route path="/edit-test/:id" element={user?.role !== 'STUDENT' ? <TestEditor /> : <Navigate to="/dashboard" />} />
+                <Route path="/import-students" element={user?.role !== 'STUDENT' ? <ImportStudents /> : <Navigate to="/dashboard" />} />
+                <Route path="/groups" element={user?.role !== 'STUDENT' ? <GroupsList /> : <Navigate to="/dashboard" />} />
+                <Route path="/groups/:groupName" element={user?.role !== 'STUDENT' ? <GroupDetails /> : <Navigate to="/dashboard" />} />
+                <Route path="/add-teacher" element={user?.role === 'ADMIN' ? <AddTeacher /> : <Navigate to="/dashboard" />} />
 
-                <Route path="/import-students" element={
-                    <ProtectedRoute><ImportStudents /></ProtectedRoute>
-                } />
+                {/* Маршруты для СТУДЕНТА */}
+                <Route path="/take-test/:id" element={user?.role === 'STUDENT' ? <TakeTest /> : <Navigate to="/dashboard" />} />
 
-                <Route path="/groups" element={
-                    <ProtectedRoute><GroupsList /></ProtectedRoute>
-                    } />
-
-                <Route path="/groups/:groupName" element=
-                {<ProtectedRoute><GroupDetails /></ProtectedRoute>
-                    } />
-
-                <Route path="/add-teacher" element=
-                {<ProtectedRoute><AddTeacher /></ProtectedRoute>
-                    } />
-
-                <Route path="*" element={<Navigate to="/login" />} />
+                {/* Редирект с корня на дашборд */}
+                <Route path="/" element={<Navigate to="/dashboard" />} />
             </Routes>
         </BrowserRouter>
     );
 }
-
-export default App;

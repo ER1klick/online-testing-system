@@ -65,4 +65,14 @@ public class TestController {
         assignmentRepository.save(assignment);
         return ResponseEntity.ok("Тест успешно назначен " + studentIds.size() + " студентам!");
     }
+
+    @GetMapping("/my")
+    public ResponseEntity<List<TestResponseDto>> getMyTests() {
+        return ResponseEntity.ok(testService.getTestsForStudent());
+    }
+
+    @PostMapping("/{id}/start")
+    public ResponseEntity<UUID> startTest(@PathVariable UUID id) {
+        return ResponseEntity.ok(testService.startTest(id));
+    }
 }

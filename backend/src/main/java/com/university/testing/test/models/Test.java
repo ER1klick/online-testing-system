@@ -1,5 +1,6 @@
 package com.university.testing.test.models;
 
+import com.university.testing.shared.models.User;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -25,4 +26,16 @@ public class Test {
     @Builder.Default
     private List<Question> questions = new ArrayList<>();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "author_id")
+    private User author;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "test_coauthors",
+            joinColumns = @JoinColumn(name = "test_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    @Builder.Default
+    private List<User> coAuthors = new ArrayList<>();
 }

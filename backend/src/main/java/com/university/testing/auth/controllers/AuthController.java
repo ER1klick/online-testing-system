@@ -1,5 +1,6 @@
 package com.university.testing.auth.controllers;
 
+import com.university.testing.auth.data.UserRepository;
 import com.university.testing.auth.services.AuthService;
 import com.university.testing.shared.dtos.LoginRequest;
 import com.university.testing.shared.models.User;
@@ -13,6 +14,7 @@ import org.springframework.security.web.context.HttpSessionSecurityContextReposi
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -20,6 +22,8 @@ import java.util.List;
 public class AuthController {
 
     private final AuthService authService;
+
+    private final UserRepository userRepository;
 
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody LoginRequest request, HttpServletRequest httpRequest) {
@@ -39,11 +43,20 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<?> getCurrentUser(HttpServletRequest request) {
-        var session = request.getSession(false);
-        if (session != null && SecurityContextHolder.getContext().getAuthentication() != null) {
-            return ResponseEntity.ok("Authenticated");
+    public ResponseEntity<?> getCurrentUser() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+            return ResponseEntity.ok(Map.of("role", "GUEST"));
         }
-        return ResponseEntity.status(401).body("Not authenticated");
+
+        User user = userRepository.findByEmail(auth.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return ResponseEntity.ok(Map.of(
+                "email", user.getEmail(),
+                "role", user.getRole().name(),
+                "fullName", user.getFullName() != null ? user.getFullName() : ""
+        ));
     }
 }

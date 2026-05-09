@@ -15,8 +15,8 @@ export default function Login() {
         setError('');
         try {
             await api.post('/v1/auth/login', { email, password });
-            localStorage.setItem('isAuthenticated', 'true');
-            navigate('/dashboard');
+            window.location.href = '/dashboard';
+
         } catch (err) {
             setError('Неверный email или пароль');
         } finally {
