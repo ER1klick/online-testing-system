@@ -10,7 +10,6 @@ import AddTeacher from './pages/AddTeacher';
 import TakeTest from './pages/TakeTest';
 import GroupsList from './pages/GroupsList';
 import GroupDetails from './pages/GroupDetails';
-import TestResults from './pages/TestResults';
 import SubmissionDetail from './pages/SubmissionDetail';
 
 export default function App() {
@@ -49,7 +48,6 @@ export default function App() {
                 <Route path="/groups" element={user?.role !== 'STUDENT' ? <GroupsList /> : <Navigate to="/dashboard" />} />
                 <Route path="/groups/:groupName" element={user?.role !== 'STUDENT' ? <GroupDetails /> : <Navigate to="/dashboard" />} />
                 <Route path="/add-teacher" element={user?.role === 'ADMIN' ? <AddTeacher /> : <Navigate to="/dashboard" />} />
-                <Route path="/test-results/:testId" element={user?.role !== 'STUDENT' ? <TestResults /> : <Navigate to="/dashboard" />} />
                 <Route path="/submission/:submissionId" element={user?.role !== 'STUDENT' ? <SubmissionDetail /> : <Navigate to="/dashboard" />} />
 
                 {/* Маршруты для СТУДЕНТА */}

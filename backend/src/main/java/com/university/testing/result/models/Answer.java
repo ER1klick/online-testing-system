@@ -27,4 +27,9 @@ public class Answer {
     private String studentAnswer;
 
     private Double score;
+
+    public UUID getQuestionId() { return question.getId(); }
+    public Object getType() { return question.getType(); }
+    public String getContent() { return studentAnswer; }
+    public Double getPoints() { return score; }
 }

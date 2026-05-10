@@ -11,7 +11,8 @@ export default function SubmissionDetail() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        api.get(`/v1/results/submission/${submissionId}`).then(res => {
+        api.get(`/v1/results/submission/${submissionId}`)
+        .then(res => {
             setData(res.data);
             setLoading(false);
         });

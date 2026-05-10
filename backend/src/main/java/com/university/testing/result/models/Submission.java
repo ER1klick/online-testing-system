@@ -26,7 +26,6 @@ public class Submission {
     private Test test;
 
     private LocalDateTime submittedAt;
-
     private Double finalScore;
 
     @Column(name = "historical_group_name")
