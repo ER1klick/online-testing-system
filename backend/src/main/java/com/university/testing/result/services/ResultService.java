@@ -85,6 +85,11 @@ public class ResultService {
             if (ans.getQuestion() != null) {
                 ansMap.put("questionText", ans.getQuestion().getText());
                 ansMap.put("type", ans.getQuestion().getType());
+
+                if (ans.getQuestion().getContent() != null) {
+                    ansMap.put("options", ans.getQuestion().getContent().get("options"));
+                    ansMap.put("correct", ans.getQuestion().getContent().get("correct"));
+                }
             } else {
                 ansMap.put("questionText", "Вопрос удален");
                 ansMap.put("type", "UNKNOWN");

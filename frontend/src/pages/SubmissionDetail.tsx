@@ -40,16 +40,68 @@ export default function SubmissionDetail() {
                             <div style={{ fontSize: '0.8rem', color: '#666', marginBottom: '0.5rem' }}>Ответ студента:</div>
 
                             {ans.type === 'CODE' ? (
-                                <Editor
-                                    height="200px"
-                                    defaultLanguage={ans.language}
-                                    theme="vs-dark"
-                                    value={ans.content}
-                                    options={{ readOnly: true, minimap: { enabled: false } }}
-                                />
-                            ) : (
-                                <div style={{ fontSize: '1.1rem' }}>{ans.content}</div>
-                            )}
+                            <Editor
+                                height="200px"
+                                defaultLanguage={ans.language}
+                                theme="vs-dark"
+                                value={ans.content}
+                                options={{ readOnly: true, minimap: { enabled: false } }}
+                            />
+                        ) : ans.type === 'TEXT' ? (
+                            <div style={{ fontSize: '1.1rem' }}>{ans.content}</div>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                {ans.options?.map((opt: string, i: number) => {
+                                    let isSelected = false;
+                                    if (ans.type === 'SINGLE_CHOICE') {
+                                        isSelected = String(ans.content) === String(i);
+                                    } else {
+                                        try {
+                                            const parsed = JSON.parse(ans.content);
+                                            isSelected = Array.isArray(parsed) && parsed.includes(i);
+                                        } catch (e) {}
+                                    }
+
+                                    const isCorrectOption = ans.correct?.includes(i);
+
+                                    // Настраиваем цвета
+                                    let bgColor = 'transparent';
+                                    let borderColor = '#dee2e6';
+                                    if (isSelected && isCorrectOption) {
+                                        bgColor = '#d4edda'; borderColor = '#28a745';
+                                    } else if (isSelected && !isCorrectOption) {
+                                        bgColor = '#f8d7da'; borderColor = '#dc3545';
+                                    } else if (!isSelected && isCorrectOption) {
+                                        borderColor = '#28a745';
+                                    }
+
+                                    return (
+                                        <div key={i} style={{
+                                            padding: '10px 12px',
+                                            border: `2px solid ${borderColor}`,
+                                            borderRadius: '6px',
+                                            backgroundColor: bgColor,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '10px',
+                                            opacity: (!isSelected && !isCorrectOption) ? 0.6 : 1
+                                        }}>
+                                            <input
+                                                type={ans.type === 'SINGLE_CHOICE' ? 'radio' : 'checkbox'}
+                                                checked={isSelected}
+                                                readOnly
+                                                disabled
+                                                style={{ width: '16px', height: '16px' }}
+                                            />
+                                            <span style={{ fontSize: '1rem', color: '#101820' }}>{opt}</span>
+
+                                            {isSelected && isCorrectOption && <FiCheck color="#28a745" size={20} style={{ marginLeft: 'auto' }} />}
+                                            {isSelected && !isCorrectOption && <FiX color="#dc3545" size={20} style={{ marginLeft: 'auto' }} />}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
                         </div>
 
                         <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '10px', color: ans.isCorrect ? '#28a745' : '#dc3545', fontWeight: 'bold' }}>
