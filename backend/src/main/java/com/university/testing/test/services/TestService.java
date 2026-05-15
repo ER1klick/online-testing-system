@@ -80,6 +80,8 @@ public class TestService {
 
     @Transactional(readOnly = true)
     public TestResponseDto getTestById(UUID id) {
+        User currentUser = getCurrentUser();
+
         Test test = testRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Test not found"));
 
@@ -89,8 +91,17 @@ public class TestService {
                     dto.setId(q.getId());
                     dto.setText(q.getText());
                     dto.setType(q.getType());
-                    dto.setContent(q.getContent());
                     dto.setSectionTitle(q.getSectionTitle());
+
+                    Map<String, Object> content = q.getContent();
+                    if (currentUser.getRole() == User.Role.STUDENT && content != null) {
+                        Map<String, Object> filteredContent = new java.util.HashMap<>(content);
+                        filteredContent.remove("correct");
+                        dto.setContent(filteredContent);
+                    } else {
+                        dto.setContent(content);
+                    }
+
                     return dto;
                 }).toList();
 
@@ -192,15 +203,34 @@ public class TestService {
                         .build();
 
                 if ("CODE".equals(question.getType())) {
+                    String lang = (question.getContent() != null && question.getContent().containsKey("language"))
+                            ? question.getContent().get("language").toString()
+                            : "python";
+
                     executionProducer.sendTask(ExecutionTaskDto.builder()
                             .submissionId(savedSubmission.getId())
                             .questionId(qId)
                             .code(studentAns.toString())
-                            .language("python")
+                            .language(lang)
                             .build());
                 } else {
-                    answer.setScore(1.0);
+                    double score = 0.0;
+                    if (question.getContent() != null && question.getContent().containsKey("correct")) {
+                        List<?> correctList = (List<?>) question.getContent().get("correct");
+
+                        if ("SINGLE_CHOICE".equals(question.getType())) {
+                            if (!correctList.isEmpty() && String.valueOf(correctList.get(0)).equals(String.valueOf(studentAns))) {
+                                score = 1.0;
+                            }
+                        } else if ("MULTIPLE_CHOICE".equals(question.getType()) && studentAns instanceof List) {
+                            List<String> sList = ((List<?>) studentAns).stream().map(String::valueOf).sorted().toList();
+                            List<String> cList = correctList.stream().map(String::valueOf).sorted().toList();
+                            if (sList.equals(cList)) score = 1.0;
+                        }
+                    }
+                    answer.setScore(score);
                 }
+
                 answerRepository.save(answer);
             });
         }
