@@ -1,8 +1,12 @@
 package com.university.testing.test.services;
 
 import com.university.testing.auth.data.UserRepository;
+import com.university.testing.execution.services.ExecutionProducer;
+import com.university.testing.result.data.AnswerRepository;
 import com.university.testing.result.data.SubmissionRepository;
+import com.university.testing.result.models.Answer;
 import com.university.testing.result.models.Submission;
+import com.university.testing.shared.dtos.ExecutionTaskDto;
 import com.university.testing.shared.dtos.QuestionDto;
 import com.university.testing.shared.dtos.TestCreateDto;
 import com.university.testing.shared.dtos.TestResponseDto;
@@ -19,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -28,10 +33,13 @@ public class TestService {
     private final UserRepository userRepository;
     private final TestAssignmentRepository assignmentRepository;
     private final SubmissionRepository submissionRepository;
+    private final AnswerRepository answerRepository;
+    private final ExecutionProducer executionProducer;
 
     private User getCurrentUser() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepository.findByEmail(email)
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) throw new RuntimeException("Not authenticated");
+        return userRepository.findByEmail(auth.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
@@ -78,6 +86,7 @@ public class TestService {
         List<QuestionDto> questionDtos = (test.getQuestions() == null) ? List.of() :
                 test.getQuestions().stream().map(q -> {
                     QuestionDto dto = new QuestionDto();
+                    dto.setId(q.getId());
                     dto.setText(q.getText());
                     dto.setType(q.getType());
                     dto.setContent(q.getContent());
@@ -145,8 +154,57 @@ public class TestService {
                 .test(test)
                 .submittedAt(LocalDateTime.now())
                 .groupName(student.getStudentGroup() != null ? student.getStudentGroup().getName() : "External")
+                .finalScore(0.0)
                 .build();
 
         return submissionRepository.save(submission).getId();
+    }
+
+    @Transactional
+    @SuppressWarnings("unchecked")
+    public UUID submitTest(UUID testId, Map<String, Object> submissionData) {
+        User student = getCurrentUser();
+        Test test = testRepository.findById(testId).orElseThrow();
+
+        Submission submission = Submission.builder()
+                .student(student)
+                .test(test)
+                .submittedAt(LocalDateTime.now())
+                .groupName(student.getStudentGroup() != null ? student.getStudentGroup().getName() : "External")
+                .finalScore(0.0)
+                .build();
+
+        final Submission savedSubmission = submissionRepository.save(submission);
+        Map<String, Object> answersMap = (Map<String, Object>) submissionData.get("answers");
+
+        if (answersMap != null) {
+            answersMap.forEach((qIdStr, studentAns) -> {
+                UUID qId = UUID.fromString(qIdStr);
+                Question question = test.getQuestions().stream()
+                        .filter(q -> q.getId().equals(qId))
+                        .findFirst().orElseThrow();
+
+                Answer answer = Answer.builder()
+                        .submission(savedSubmission)
+                        .question(question)
+                        .studentAnswer(studentAns.toString())
+                        .score(0.0)
+                        .build();
+
+                if ("CODE".equals(question.getType())) {
+                    executionProducer.sendTask(ExecutionTaskDto.builder()
+                            .submissionId(savedSubmission.getId())
+                            .questionId(qId)
+                            .code(studentAns.toString())
+                            .language("python")
+                            .build());
+                } else {
+                    answer.setScore(1.0);
+                }
+                answerRepository.save(answer);
+            });
+        }
+
+        return savedSubmission.getId();
     }
 }

@@ -8,6 +8,8 @@ import com.github.dockerjava.core.DockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import com.github.dockerjava.transport.DockerHttpClient;
+import com.university.testing.result.services.ResultService;
+import com.university.testing.shared.dtos.ExecutionTaskDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -17,8 +19,10 @@ import java.io.ByteArrayOutputStream;
 public class DockerService {
     private static final Logger log = LoggerFactory.getLogger(DockerService.class);
     private final DockerClient dockerClient;
+    private final ResultService resultService;
 
-    public DockerService() {
+    public DockerService(ResultService resultService) {
+        this.resultService = resultService;
         DockerClientConfig config = DefaultDockerClientConfig.createDefaultConfigBuilder()
                 .withDockerHost("npipe:////./pipe/docker_engine")
                 .build();
@@ -29,6 +33,11 @@ public class DockerService {
                 .build();
 
         this.dockerClient = DockerClientImpl.getInstance(config, httpClient);
+    }
+
+    public void runContainer(ExecutionTaskDto task) {
+        String output = runCode(task.getCode(), task.getLanguage());
+        resultService.saveResult(task.getSubmissionId(), task.getQuestionId(), output);
     }
 
     public String runCode(String code, String language) {

@@ -15,13 +15,8 @@ public class ExecutionController {
 
     @PostMapping("/test")
     public ResponseEntity<String> testExecution(@RequestBody ExecutionTaskDto task) {
-        executionProducer.sendTask(
-                task.getCode(),
-                task.getLanguage(),
-                task.getSubmissionId(),
-                task.getQuestionId()
-        );
+        executionProducer.sendTask(task);
 
-        return ResponseEntity.ok("Задача отправлена в очередь RabbitMQ!");
+        return ResponseEntity.ok("The task has been sent to the RabbitMQ queue");
     }
 }

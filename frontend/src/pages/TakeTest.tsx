@@ -41,23 +41,9 @@ export default function TakeTest() {
 
         setIsSubmitting(true);
         try {
-            const subRes = await api.post(`/v1/tests/${id}/submit-final`);
-            const newSubmissionId = subRes.data.id; // Получаем ID созданной записи
-
-            for (let i = 0; i < test.questions.length; i++) {
-                const q = test.questions[i];
-                const safeId = getQuestionId(q, i);
-                const currentAns = answers[safeId];
-
-                const payload = {
-                    submissionId: newSubmissionId,
-                    questionId: q.id,
-                    code: Array.isArray(currentAns) ? JSON.stringify(currentAns) : String(currentAns),
-                    language: q.type === 'CODE' ? (q.content?.language || 'python') : 'text'
-                };
-
-                await api.post('/v1/execution/test', payload);
-            }
+            await api.post(`/v1/tests/${id}/submit-final`, {
+                answers: answers
+            });
 
             alert('Тест успешно завершен и отправлен на проверку!');
             navigate('/dashboard');

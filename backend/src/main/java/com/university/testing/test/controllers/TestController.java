@@ -75,4 +75,9 @@ public class TestController {
     public ResponseEntity<UUID> startTest(@PathVariable UUID id) {
         return ResponseEntity.ok(testService.startTest(id));
     }
+
+    @PostMapping("/{id}/submit-final")
+    public ResponseEntity<?> submitTest(@PathVariable UUID id, @RequestBody java.util.Map<String, Object> submissionData) {
+        return ResponseEntity.ok(testService.submitTest(id, submissionData));
+    }
 }
