@@ -4,6 +4,8 @@ import com.university.testing.test.models.Question;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.UUID;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Entity
 @Table(name = "answers")
@@ -19,6 +21,7 @@ public class Answer {
     @JoinColumn(name = "submission_id")
     private Submission submission;
 
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id")
     private Question question;

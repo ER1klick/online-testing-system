@@ -124,18 +124,20 @@ public class TestService {
         test.getQuestions().clear();
         testRepository.saveAndFlush(test);
 
-        List<Question> newQuestions = dto.getQuestions().stream()
-                .filter(java.util.Objects::nonNull)
-                .map(qDto -> Question.builder()
-                        .text(qDto.getText())
-                        .type(qDto.getType())
-                        .content(qDto.getContent())
-                        .sectionTitle(qDto.getSectionTitle())
-                        .test(test)
-                        .build()
-                ).toList();
+        if (dto.getQuestions() != null) {
+            List<Question> newQuestions = dto.getQuestions().stream()
+                    .filter(java.util.Objects::nonNull)
+                    .map(qDto -> Question.builder()
+                            .text(qDto.getText())
+                            .type(qDto.getType())
+                            .content(qDto.getContent())
+                            .sectionTitle(qDto.getSectionTitle())
+                            .test(test)
+                            .build()
+                    ).toList();
+            test.getQuestions().addAll(newQuestions);
+        }
 
-        test.getQuestions().addAll(newQuestions);
         testRepository.save(test);
         return getTestById(id);
     }

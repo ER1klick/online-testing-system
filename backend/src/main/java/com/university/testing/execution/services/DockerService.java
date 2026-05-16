@@ -10,10 +10,13 @@ import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import com.github.dockerjava.transport.DockerHttpClient;
 import com.university.testing.result.services.ResultService;
 import com.university.testing.shared.dtos.ExecutionTaskDto;
+import com.university.testing.shared.utils.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
 import java.io.ByteArrayOutputStream;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class DockerService {
@@ -63,14 +66,22 @@ public class DockerService {
             CreateContainerResponse container = dockerClient.createContainerCmd(imageName)
                     .withCmd("sh", "-c", cmd)
                     .withHostConfig(HostConfig.newHostConfig()
-                            .withMemory(128 * 1024 * 1024L)
-                            .withNetworkMode("none"))
+                            .withMemory(Constants.DOCKER_MEMORY_LIMIT)
+                            .withNetworkMode(Constants.DOCKER_NETWORK_MODE))
                     .exec();
 
             dockerClient.startContainerCmd(container.getId()).exec();
-            dockerClient.waitContainerCmd(container.getId())
+
+            boolean completed = dockerClient.waitContainerCmd(container.getId())
                     .exec(new com.github.dockerjava.core.command.WaitContainerResultCallback())
-                    .awaitCompletion();
+                    .awaitCompletion(Constants.EXECUTION_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+            if (!completed) {
+                log.warn("Container {} timed out", container.getId());
+                dockerClient.stopContainerCmd(container.getId()).exec();
+                dockerClient.removeContainerCmd(container.getId()).exec();
+                return "Error: Execution timed out (Limit: " + Constants.EXECUTION_TIMEOUT_SECONDS + "s)";
+            }
 
             dockerClient.logContainerCmd(container.getId())
                     .withStdOut(true)
@@ -78,7 +89,11 @@ public class DockerService {
                     .exec(new com.github.dockerjava.api.async.ResultCallback.Adapter<>() {
                         @Override
                         public void onNext(com.github.dockerjava.api.model.Frame object) {
-                            try { outputStream.write(object.getPayload()); } catch (Exception e) { log.error("Log error", e); }
+                            try {
+                                outputStream.write(object.getPayload());
+                            } catch (Exception e) {
+                                log.error("Log error", e);
+                            }
                         }
                     }).awaitCompletion();
 

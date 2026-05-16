@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { Toaster } from 'react-hot-toast';
 import { api } from './services/api';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -32,30 +33,33 @@ export default function App() {
     if (isLoading) return <div style={{ padding: '2rem', textAlign: 'center' }}>Загрузка...</div>;
 
     return (
-        <BrowserRouter>
-            <Routes>
-                {/* Страница логина */}
-                <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
+        <>
+            <Toaster position="top-center" reverseOrder={false} />
+            <BrowserRouter>
+                <Routes>
+                    {/* Страница логина */}
+                    <Route path="/login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
 
-                {/* Если залогинен - показываем дашборд по роли, если нет - на логин */}
-                <Route path="/dashboard" element={
-                    user ? (user.role === 'STUDENT' ? <StudentDashboard /> : <Dashboard />) : <Navigate to="/login" />
-                } />
+                    {/* Если залогинен - показываем дашборд по роли, если нет - на логин */}
+                    <Route path="/dashboard" element={
+                        user ? (user.role === 'STUDENT' ? <StudentDashboard /> : <Dashboard />) : <Navigate to="/login" />
+                    } />
 
-                {/* Маршруты для ПРЕПОДАВАТЕЛЯ и АДМИНА */}
-                <Route path="/edit-test/:id" element={user?.role !== 'STUDENT' ? <TestEditor /> : <Navigate to="/dashboard" />} />
-                <Route path="/import-students" element={user?.role !== 'STUDENT' ? <ImportStudents /> : <Navigate to="/dashboard" />} />
-                <Route path="/groups" element={user?.role !== 'STUDENT' ? <GroupsList /> : <Navigate to="/dashboard" />} />
-                <Route path="/groups/:groupName" element={user?.role !== 'STUDENT' ? <GroupDetails /> : <Navigate to="/dashboard" />} />
-                <Route path="/add-teacher" element={user?.role === 'ADMIN' ? <AddTeacher /> : <Navigate to="/dashboard" />} />
-                <Route path="/submission/:submissionId" element={user?.role !== 'STUDENT' ? <SubmissionDetail /> : <Navigate to="/dashboard" />} />
+                    {/* Маршруты для ПРЕПОДАВАТЕЛЯ и АДМИНА */}
+                    <Route path="/edit-test/:id" element={user?.role !== 'STUDENT' ? <TestEditor /> : <Navigate to="/dashboard" />} />
+                    <Route path="/import-students" element={user?.role !== 'STUDENT' ? <ImportStudents /> : <Navigate to="/dashboard" />} />
+                    <Route path="/groups" element={user?.role !== 'STUDENT' ? <GroupsList /> : <Navigate to="/dashboard" />} />
+                    <Route path="/groups/:groupName" element={user?.role !== 'STUDENT' ? <GroupDetails /> : <Navigate to="/dashboard" />} />
+                    <Route path="/add-teacher" element={user?.role === 'ADMIN' ? <AddTeacher /> : <Navigate to="/dashboard" />} />
+                    <Route path="/submission/:submissionId" element={user?.role !== 'STUDENT' ? <SubmissionDetail /> : <Navigate to="/dashboard" />} />
 
-                {/* Маршруты для СТУДЕНТА */}
-                <Route path="/take-test/:id" element={user?.role === 'STUDENT' ? <TakeTest /> : <Navigate to="/dashboard" />} />
+                    {/* Маршруты для СТУДЕНТА */}
+                    <Route path="/take-test/:id" element={user?.role === 'STUDENT' ? <TakeTest /> : <Navigate to="/dashboard" />} />
 
-                {/* Редирект с корня на дашборд */}
-                <Route path="/" element={<Navigate to="/dashboard" />} />
-            </Routes>
-        </BrowserRouter>
+                    {/* Редирект с корня на дашборд */}
+                    <Route path="/" element={<Navigate to="/dashboard" />} />
+                </Routes>
+            </BrowserRouter>
+        </>
     );
 }

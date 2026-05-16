@@ -11,6 +11,7 @@ import { arrayMove, SortableContext, verticalListSortingStrategy, useSortable } 
 import { CSS } from '@dnd-kit/utilities';
 import TestAssignTab from '../components/TestAssignTab';
 import TestResultsTab from '../components/TestResultsTab';
+import { toast } from 'react-hot-toast';
 
 interface Question {
     text: string;
@@ -109,7 +110,6 @@ export default function TestEditor() {
         setSections(updated);
     };
 
-    // --- Drag and Drop ---
     const onDragEnd = (event: any) => {
         const { active, over } = event;
         if (!over || active.id === over.id) return;
@@ -142,11 +142,12 @@ export default function TestEditor() {
         const allQuestions = sections.flatMap(s => s.questions.map(q => ({ ...q, sectionTitle: s.title })));
         try {
             await api.put(`/v1/tests/${id}`, { title, description, questions: allQuestions });
-            alert('Тест успешно сохранен!');
-        } catch (error) { alert('Ошибка при сохранении'); }
+            toast.success('Тест успешно сохранен!');
+        } catch (error) {
+            toast.error('Ошибка при сохранении');
+        }
     };
 
-    // --- Вложенный компонент вопроса ---
     function SortableQuestion({ q, qIndex, sIndex }: { q: Question, qIndex: number, sIndex: number }) {
         const { attributes, listeners, setNodeRef, transform } = useSortable({ id: `q-${sIndex}-${qIndex}` });
         const style = { transform: CSS.Transform.toString(transform) };
@@ -161,7 +162,6 @@ export default function TestEditor() {
                             {Object.entries(TYPE_LABELS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
                         </select>
 
-                        {/* ПОЛЕ ДЛЯ БАЛЛОВ */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginLeft: '15px' }}>
                             <label style={{ fontSize: '0.85rem', color: '#666' }}>Баллы:</label>
                             <input
@@ -214,8 +214,6 @@ export default function TestEditor() {
             </header>
 
             <main style={{ padding: '2rem', maxWidth: activeTab === 'results' ? '1200px' : '900px', margin: '0 auto', transition: 'max-width 0.3s ease' }}>
-
-                {/* ВКЛАДКА: РЕДАКТИРОВАНИЕ */}
                 {activeTab === 'edit' && (
                     <>
                         <div style={{ backgroundColor: 'white', padding: '2rem', borderRadius: '12px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', marginBottom: '2rem', borderTop: '10px solid #0055A4' }}>
@@ -242,16 +240,13 @@ export default function TestEditor() {
                     </>
                 )}
 
-                {/* ВКЛАДКА: НАЗНАЧИТЬ */}
                 {activeTab === 'assign' && (
                     <TestAssignTab testId={id!} onAssigned={() => setActiveTab('edit')} />
                 )}
 
-                {/* ВКЛАДКА: РЕЗУЛЬТАТЫ */}
                 {activeTab === 'results' && (
                     <TestResultsTab testId={id!} />
                 )}
-
             </main>
         </div>
     );
