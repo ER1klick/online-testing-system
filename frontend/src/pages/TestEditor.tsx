@@ -45,36 +45,42 @@ export default function TestEditor() {
         api.get(`/v1/tests/${id}`).then(res => {
             setTitle(res.data.title);
             setDescription(res.data.description);
-            const grouped = (res.data.questions ||[]).reduce((acc: any, q: any) => {
+            const grouped = (res.data.questions || []).reduce((acc: any, q: any) => {
                 const sTitle = q.sectionTitle || 'Раздел 1';
                 if (!acc[sTitle]) acc[sTitle] = [];
                 acc[sTitle].push(q);
                 return acc;
             }, {});
             const sectionsArray = Object.keys(grouped).map(t => ({ title: t, questions: grouped[t] }));
-            setSections(sectionsArray.length > 0 ? sectionsArray :[{ title: 'Раздел 1', questions: [] }]);
+            setSections(sectionsArray.length > 0 ? sectionsArray : [{ title: 'Раздел 1', questions: [] }]);
         }).finally(() => setIsLoading(false));
-    },[id]);
+    }, [id]);
 
-    // --- Функции управления вопросами ---
     const addSection = () => setSections([...sections, { title: `Раздел ${sections.length + 1}`, questions: [] }]);
 
     const addQuestion = (sIndex: number, type: Question['type']) => {
         const updated = [...sections];
-        updated[sIndex].questions.push({ text: '', type: type, content: type === 'CODE' ? { language: 'python', timeLimit: 5 } : { options: [''], correct:[] } });
+        updated[sIndex].questions.push({ text: '', type: type, content: type === 'CODE' ? { language: 'python', timeLimit: 5, points: 1 } : { options: [''], correct: [], points: 1 } });
         setSections(updated);
     };
 
     const updateQuestionType = (sIndex: number, qIndex: number, type: string) => {
         const updated = [...sections];
+        const currentPoints = updated[sIndex].questions[qIndex].content?.points || 1;
         updated[sIndex].questions[qIndex].type = type as any;
-        updated[sIndex].questions[qIndex].content = type === 'CODE' ? { language: 'python', timeLimit: 5 } : { options: [''], correct:[] };
+        updated[sIndex].questions[qIndex].content = type === 'CODE' ? { language: 'python', timeLimit: 5, points: currentPoints } : { options: [''], correct: [], points: currentPoints };
         setSections(updated);
     };
 
     const updateQuestionText = (sIndex: number, qIndex: number, text: string) => {
         const updated = [...sections];
         updated[sIndex].questions[qIndex].text = text;
+        setSections(updated);
+    };
+
+    const updateQuestionPoints = (sIndex: number, qIndex: number, points: number) => {
+        const updated = [...sections];
+        updated[sIndex].questions[qIndex].content.points = points;
         setSections(updated);
     };
 
@@ -94,7 +100,7 @@ export default function TestEditor() {
     const toggleCorrect = (sIndex: number, qIndex: number, oIndex: number) => {
         const updated = [...sections];
         const q = updated[sIndex].questions[qIndex];
-        if (!q.content.correct) q.content.correct =[];
+        if (!q.content.correct) q.content.correct = [];
         if (q.type === 'SINGLE_CHOICE') q.content.correct = [oIndex];
         else {
             if (q.content.correct.includes(oIndex)) q.content.correct = q.content.correct.filter((i: number) => i !== oIndex);
@@ -154,6 +160,18 @@ export default function TestEditor() {
                         <select value={q.type} onChange={(e) => updateQuestionType(sIndex, qIndex, e.target.value)} style={{ padding: '0.4rem', borderRadius: '4px', border: '1px solid #dee2e6', fontWeight: 'bold', color: '#0055A4' }}>
                             {Object.entries(TYPE_LABELS).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
                         </select>
+
+                        {/* ПОЛЕ ДЛЯ БАЛЛОВ */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginLeft: '15px' }}>
+                            <label style={{ fontSize: '0.85rem', color: '#666' }}>Баллы:</label>
+                            <input
+                                type="number"
+                                min="1"
+                                value={q.content?.points || 1}
+                                onChange={e => updateQuestionPoints(sIndex, qIndex, parseInt(e.target.value) || 1)}
+                                style={{ width: '60px', padding: '0.3rem', borderRadius: '4px', border: '1px solid #dee2e6' }}
+                            />
+                        </div>
                     </div>
                     <button onClick={() => { const up = [...sections]; up[sIndex].questions.splice(qIndex, 1); setSections(up); }} style={{ color: '#dc3545', background: 'none', border: 'none', cursor: 'pointer' }}><FiTrash2 size={18} /></button>
                 </div>
@@ -161,10 +179,10 @@ export default function TestEditor() {
 
                 {(q.type === 'SINGLE_CHOICE' || q.type === 'MULTIPLE_CHOICE') && (
                     <div style={{ marginTop: '1rem' }}>
-                        {(q.content?.options ||[]).map((opt: string, oIndex: number) => (
+                        {(q.content?.options || []).map((opt: string, oIndex: number) => (
                             <div key={oIndex} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '0.5rem' }}>
-                                <button onClick={() => toggleCorrect(sIndex, qIndex, oIndex)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: (q.content?.correct ||[]).includes(oIndex) ? '#28a745' : '#ccc' }}>
-                                    {(q.content?.correct ||[]).includes(oIndex) ? <FiCheckCircle size={20} /> : <FiCircle size={20} />}
+                                <button onClick={() => toggleCorrect(sIndex, qIndex, oIndex)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: (q.content?.correct || []).includes(oIndex) ? '#28a745' : '#ccc' }}>
+                                    {(q.content?.correct || []).includes(oIndex) ? <FiCheckCircle size={20} /> : <FiCircle size={20} />}
                                 </button>
                                 <input value={opt} onChange={e => updateOption(sIndex, qIndex, oIndex, e.target.value)} placeholder={`Вариант ${oIndex + 1}`} style={{ padding: '0.4rem', width: '80%', border: '1px solid #eee', borderRadius: '4px' }} />
                             </div>
@@ -195,7 +213,6 @@ export default function TestEditor() {
                 </button>
             </header>
 
-            {/* Динамическая ширина: для результатов делаем шире, чтобы таблица влезала */}
             <main style={{ padding: '2rem', maxWidth: activeTab === 'results' ? '1200px' : '900px', margin: '0 auto', transition: 'max-width 0.3s ease' }}>
 
                 {/* ВКЛАДКА: РЕДАКТИРОВАНИЕ */}

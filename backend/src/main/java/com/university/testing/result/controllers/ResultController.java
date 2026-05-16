@@ -25,4 +25,10 @@ public class ResultController {
     public ResponseEntity<?> getSubmissionDetails(@PathVariable UUID submissionId) {
         return ResponseEntity.ok(resultService.getSubmissionDetails(submissionId));
     }
+
+    @PutMapping("/answers/{answerId}/score")
+    public ResponseEntity<?> updateScore(@PathVariable UUID answerId, @RequestBody java.util.Map<String, Double> payload) {
+        resultService.updateAnswerScore(answerId, payload.get("score"));
+        return ResponseEntity.ok("Оценка обновлена");
+    }
 }

@@ -188,6 +188,8 @@ public class TestService {
         final Submission savedSubmission = submissionRepository.save(submission);
         Map<String, Object> answersMap = (Map<String, Object>) submissionData.get("answers");
 
+        double[] totalTheoryScore = {0.0};
+
         if (answersMap != null) {
             answersMap.forEach((qIdStr, studentAns) -> {
                 UUID qId = UUID.fromString(qIdStr);
@@ -199,8 +201,13 @@ public class TestService {
                         .submission(savedSubmission)
                         .question(question)
                         .studentAnswer(studentAns.toString())
-                        .score(0.0)
+                        .score(null)
                         .build();
+
+                double maxPoints = 1.0;
+                if (question.getContent() != null && question.getContent().containsKey("points")) {
+                    maxPoints = Double.parseDouble(question.getContent().get("points").toString());
+                }
 
                 if ("CODE".equals(question.getType())) {
                     String lang = (question.getContent() != null && question.getContent().containsKey("language"))
@@ -213,6 +220,8 @@ public class TestService {
                             .code(studentAns.toString())
                             .language(lang)
                             .build());
+                } else if ("TEXT".equals(question.getType())) {
+                    answer.setScore(null);
                 } else {
                     double score = 0.0;
                     if (question.getContent() != null && question.getContent().containsKey("correct")) {
@@ -220,20 +229,23 @@ public class TestService {
 
                         if ("SINGLE_CHOICE".equals(question.getType())) {
                             if (!correctList.isEmpty() && String.valueOf(correctList.get(0)).equals(String.valueOf(studentAns))) {
-                                score = 1.0;
+                                score = maxPoints;
                             }
                         } else if ("MULTIPLE_CHOICE".equals(question.getType()) && studentAns instanceof List) {
                             List<String> sList = ((List<?>) studentAns).stream().map(String::valueOf).sorted().toList();
                             List<String> cList = correctList.stream().map(String::valueOf).sorted().toList();
-                            if (sList.equals(cList)) score = 1.0;
+                            if (sList.equals(cList)) score = maxPoints;
                         }
                     }
                     answer.setScore(score);
+                    totalTheoryScore[0] += score;
                 }
-
                 answerRepository.save(answer);
             });
         }
+
+        savedSubmission.setFinalScore(totalTheoryScore[0]);
+        submissionRepository.save(savedSubmission);
 
         return savedSubmission.getId();
     }
